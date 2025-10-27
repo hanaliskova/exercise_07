@@ -4,23 +4,39 @@ library(seqinr)
 rm(list = ls())
 setwd('C:/Users/hanic/Desktop/PRG/exercise_07')
 
-## TASK 1 - Counting consensus score
+
+############################## MOTIF SEARCH ####################################
+##################### The Brute-Force Motif Search #############################
+
+################################################################################
+############ TASK 1 - Counting consensus score for consensus string ############
 Score <- function(start_indexes, sequences, motif_length){
-#   seq_matrix <- as.matrix(seqs)
-#   seq_consensus <- consensus(seq_matrix)
-#   for (i in 1:ncol(seq_matrix)){
-#     column <- seq_matrix[ ,1]
-#   }
-#   return(score)
-# }
-  
   num_seqs <- length(sequences)
   score <- 0
   
   for (pos in 0:(motif_length - 1)){
     column_bases <- character(num_seqs)
     
-    for (s in 1:num_seqs){
+    for (seq in 1:num_seqs){
+      start_pos <- start_indexes[seq]
+      base <- subseq(sequences[[seq]], start = start_pos + pos, width = 1)
+      column_bases[seq] <- as.character(base)
+    }
+    freq_table <- table(column_bases)
+    score <- score + max(freq_table)
+  }
+  return(score)
+}  
+
+
+ScoreModified <- function(start_indexes, i, sequences, motif_length){
+  num_seqs <- length(sequences)
+  score <- 0
+  
+  for (pos in 0:(motif_length - 1)){
+    column_bases <- character(num_seqs)
+    
+    for (s in 1:i){
       start_pos <- start_indexes[s]
       base <- subseq(sequences[[s]], start = start_pos + pos, width = 1)
       column_bases[s] <- as.character(base)
@@ -32,17 +48,18 @@ Score <- function(start_indexes, sequences, motif_length){
 }  
   
   
-#seqs <- readDNAStringSet('seq_score.fasta', format = 'fasta')
-#idxs <- c(1,1,1,1,1)
-#length <- 5
-#Score(idxs, seqs, length)
+# seqs <- readDNAStringSet('seq_score.fasta', format = 'fasta')
+# idxs <- c(1,1,1,1,1)
+# motif_length <- 5
+# Score(idxs, seqs, motif_length)
 
 
-## TASK 2
+################################################################################
+############## TASK 2 - creating array of starting indexes #####################
 NextLeaf <- function(s, t, k){
   for (i in t:1){
     if (s[i] < k){
-      s[i] <- s[i] + k
+      s[i] <- s[i] + 1
       return(s)
     }
     s[i] <- 1
@@ -51,15 +68,16 @@ NextLeaf <- function(s, t, k){
 }
 
 
-s = c(1,1,1,1,1) # array of starting indexes
-#t = 5   # number of sequences
-#n = 70  # length of sequences  
-#l = 6   # motif_length
-#k = n - l + 1
-#NextLeaf(s, t, k)
+# s = c(1,1,1,1,1) # array of starting indexes
+# t = length(seqs)   # number of sequences
+# n = width(seqs)[1]  # length of sequences
+# l = 6   # motif_length
+# k = n - l + 1
+# NextLeaf(s, t, k)
 
 
-## TASK 3
+####################################################################################
+# TASK 3 - searching for array of starting positions with best score for consensus #
 BFMotifSearch <- function(DNA, t, n, l){
   s <- c(1, 1, 1, 1)
   bestScore <- Score(s, DNA, l)
@@ -75,19 +93,22 @@ BFMotifSearch <- function(DNA, t, n, l){
   }
 }
 
-sequences <- readDNAStringSet('seq_score.fasta', format = 'fasta')
+#sequences <- readDNAStringSet('seq_score.fasta', format = 'fasta')
 DNA <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
 motif_length <- 5
-k <- width(sequences)[1] + 1 - motif_length
+k <- width(DNA)[1] + 1 - motif_length
 s = c(1,1,1,1)
 t <- length(DNA) # number of sequences
 n <- width(DNA)[1] # length of each sequence
 l <- 5 # motif length
-
 BFMotifSearch(DNA, t, n, l)
 
 
-## TASK 4
+################################################################################
+##################### The Branch-and-Bound Motif Search ########################
+
+################################################################################
+###################### TASK 4 - Next Vertex in a tree ##########################
 NextVertex <- function(s, i, t, k){
   if (i < t){
     s[i+1] <- 1
@@ -108,17 +129,19 @@ NextVertex <- function(s, i, t, k){
 }
 
 
-sequences <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
-s <- c(1,1,1,1)
-i <- 2
-t <- length(sequences) # number of sequences
-n <- width(sequences)[1] # length of each sequence
-l <- 5 # motif length
-k <- n - l + 1
+# sequences <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
+# s <- c(1,1,1,1)
+# i <- 2
+# t <- length(sequences) # number of sequences
+# n <- width(sequences)[1] # length of each sequence
+# l <- 5 # motif length
+# k <- n - l + 1
+# 
+# NextVertex(s, i, t, k)
 
-NextVertex(s, i, t, k)
 
-## TASK 5
+################################################################################
+################# TASK 5 - Next leaf after a skip of a subtree #################
 ByPass <- function(s, i, t, k){
   for (j in i:1){
     if (s[j] < k){
@@ -129,46 +152,48 @@ ByPass <- function(s, i, t, k){
   return(c(s,0))
 }
 
-sequences <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
-s <- c(1,1,1,1)
-i <- 2
-t <- length(sequences) # number of sequences
-n <- width(sequences)[1] # length of each sequence
-l <- 5 # motif length
-k <- n - l + 1
+# sequences <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
+# s <- c(1,1,1,1)
+# i <- 2
+# t <- length(sequences) # number of sequences
+# n <- width(sequences)[1] # length of each sequence
+# l <- 5 # motif length
+# k <- n - l + 1
+# ByPass(s,i,t,k)
 
-ByPass(s,i,t,k)
 
-
-## TASK 6
+####################################################################################
+# TASK 6 - searching for array of starting positions with best score for consensus #
 BBMotifSearch <- function(DNA, t, n, l){
-  s <- c(1, 1, 1, 1)
+  s <- rep(1,t)
   bestScore <- 0
-  i <- i
+  i <- 1
   while (i > 0){
     if (i < t){
-      optimisticScore <- (Score(s, i, DNA, l) + (t - 1) * l)
+      optimisticScore <- (ScoreModified(s, i, DNA, l) + (t - 1) * l)
       if (optimisticScore < bestScore){
-        c(s, i) <- ByPass(s, i, t, n - l + 1)
+        temp <- ByPass(s, i, t, n - l + 1)
       }
       else{
-        c(s, i) <- NextVertex(s, i, t, n - l + 1)
+        temp <- NextVertex(s, i, t, n - l + 1)
       }
     }
     else{
-      if (Score(s, t, DNA, l) > bestScore){
-        bestScore <- Score(s, t, DNA, l)
+      if (ScoreModified(s, t, DNA, l) > bestScore){
+        bestScore <- ScoreModified(s, t, DNA, l)
         bestMotif <- c(s)
       }
-      c(s,i) <- NextVertex(s, i, t, n - l + 1)
+      temp <- NextVertex(s, i, t, n - l + 1)
     }
+    s <- temp[1:t]
+    i <- temp[t+1]
   }
   return(bestMotif)
 }
 
 DNA <- readDNAStringSet('seq_motif.fasta', format = 'fasta')
-t <- length(sequences) # number of sequences
-n <- width(sequences)[1] # length of each sequence
+t <- length(DNA) # number of sequences
+n <- width(DNA)[1] # length of each sequence
 l <- 5 # motif length
 BBMotifSearch(DNA, t, n, l)
 
